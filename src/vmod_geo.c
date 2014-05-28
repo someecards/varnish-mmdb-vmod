@@ -70,7 +70,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char *type)
             if (entry_data.has_data) {
                 switch(entry_data.type){
                     case MMDB_DATA_TYPE_UTF8_STRING:
-                        data = entry_data.utf8_string;
+                        data = strndup(entry_data.utf8_string, entry_data.data_size);
                         break;
                     default:
                         fprintf(
