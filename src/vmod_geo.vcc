@@ -1,0 +1,5 @@
+Module geo
+Init init_function
+Function STRING city(STRING)
+Function STRING country(STRING)
+Function STRING lookup(STRING, STRING)
