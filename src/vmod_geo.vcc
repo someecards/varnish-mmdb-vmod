@@ -2,4 +2,6 @@ Module geo
 Init init_function
 Function STRING city(STRING)
 Function STRING country(STRING)
+Function STRING region_code(STRING)
+Function STRING country_code(STRING)
 Function STRING lookup(STRING, STRING)
