@@ -1,10 +1,10 @@
-#Maxminddb Geo Ip Vmod for Varnish
+#Varnish vmod for mmdb
 
 ## Installation
 Requires libmaxminddb from https://github.com/maxmind/libmaxminddb
 
 ```
-git clone git@github.com:windelicato/somegeo-vmod.git
+git clone git@github.com:someecards/varnish-mmdb-vmod.git
 cd somegeo-vmod; ./autogen.sh
 ./configure VARNISHSRC=[PATH_TO_VARNISH_SRC] VMODDIR=/usr/lib/varnish/vmods
 make && make install
