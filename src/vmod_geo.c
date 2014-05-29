@@ -84,6 +84,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                             stderr,
                             "\n  No handler for entry data type (%d) was found\n\n",
                             entry_data.type);
+                        exit_code = 6;
                         break;
                 }
             }
@@ -94,9 +95,14 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
             ipstr);
         exit_code = 5;
     }
+    if (exit_code != 0) {
+        data = malloc(sizeof(char)*2);
+        sprintf(data, "");
+    }
 
     char *cp;
     cp = WS_Dup(sp->wrk->ws, data);
+    free(data);
     MMDB_close(&mmdb);
     return cp;
 }
