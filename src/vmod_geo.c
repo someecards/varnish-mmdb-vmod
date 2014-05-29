@@ -116,9 +116,16 @@ vmod_country(struct sess *sp, const char *ipstr)
 }
 
 const char*
-vmod_region_code(struct sess *sp, const char *ipstr)
+vmod_metro_code(struct sess *sp, const char *ipstr)
 {
         const char *lookup_path[] = {"location", "metro_code", NULL};
+        return vmod_lookup(sp, ipstr, lookup_path);
+}
+
+const char*
+vmod_region(struct sess *sp, const char *ipstr)
+{
+        const char *lookup_path[] = {"subdivisions", "0", "iso_code", NULL};
         return vmod_lookup(sp, ipstr, lookup_path);
 }
 
