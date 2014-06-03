@@ -25,12 +25,14 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
         // Create DB connection
         int status = MMDB_open(MMDB_CITY_PATH, MMDB_MODE_MMAP, &mmdb);
         if (MMDB_SUCCESS != status) {
+                #ifdef DEBUG
                 fprintf(stderr, "\n  Can't open %s - %s\n",
                         MMDB_CITY_PATH, MMDB_strerror(status));
 
                 if (MMDB_IO_ERROR == status) {
                     fprintf(stderr, "    IO error: %s\n", strerror(errno));
                 }
+                #endif
                 exit(1);
         }
 
@@ -40,16 +42,20 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
             MMDB_lookup_string(&mmdb, ipstr, &gai_error, &mmdb_error);
 
         if (0 != gai_error) {
+            #ifdef DEBUG
             fprintf(stderr,
                     "\n  Error from getaddrinfo for %s - %s\n\n",
                     ipstr, gai_strerror(gai_error));
+            #endif
             exit(2);
         }
 
         if (MMDB_SUCCESS != mmdb_error) {
+            #ifdef DEBUG
             fprintf(stderr,
                     "\n  Got an error from libmaxminddb: %s\n\n",
                     MMDB_strerror(mmdb_error));
+            #endif
             exit(3);
         }
 
@@ -61,10 +67,12 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
             int status = MMDB_aget_value(&result.entry, &entry_data, lookup_path);
 
             if (MMDB_SUCCESS != status) {
+                #ifdef DEBUG
                 fprintf(
                     stderr,
                     "Got an error looking up the entry data - %s\n",
                     MMDB_strerror(status));
+                #endif
                 exit_code = 4;
             }
 
@@ -80,19 +88,23 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                         free(str);
                         break;
                     default:
+                        #ifdef DEBUG
                         fprintf(
                             stderr,
                             "\n  No handler for entry data type (%d) was found\n\n",
                             entry_data.type);
+                        #endif
                         exit_code = 6;
                         break;
                 }
             }
     } else {
+        #ifdef DEBUG
         fprintf(
             stderr,
             "\n  No entry for this IP address (%s) was found\n\n",
             ipstr);
+        #endif
         exit_code = 5;
     }
     if (exit_code != 0) {
