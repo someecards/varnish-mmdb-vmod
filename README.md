@@ -14,7 +14,7 @@ Requires libmaxminddb from https://github.com/maxmind/libmaxminddb
 cd /usr/local/src
 git clone https://github.com/varnish/Varnish-Cache.git
 cd Varnish-Cache
-git branch -t origin/3.0 3.0
+git branch 3.0 -t origin/3.0
 git checkout 3.0
 ./autogen.sh
 ./configure --prefix=/usr/local
