@@ -67,6 +67,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                     "[INFO] Error from getaddrinfo for %s - %s\n\n",
                     ipstr, gai_strerror(gai_error));
             #endif
+			MMDB_close(&mmdb);
             return NULL;
         }
 
@@ -76,6 +77,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                     "[ERROR] Got an error from libmaxminddb: %s\n\n",
                     MMDB_strerror(mmdb_error));
             #endif
+			MMDB_close(&mmdb);
             return NULL;
         }
 
@@ -129,8 +131,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
     }
 
     if (exit_code != 0) {
-        data = malloc(sizeof(char));
-        sprintf(data, "");
+        data = calloc(1, sizeof(char));
     }
 
     char *cp;
@@ -205,9 +206,7 @@ vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
     // Create DB connection
     int openfailure = open_mmdb(&mmdb);
     if (openfailure) {
-        char *cp;
-        cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
-        return cp;
+        return WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
     }
 
     // Lookup IP in the DB
@@ -221,9 +220,8 @@ vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
                 "[WARN] vmod_lookup_weathercode: Error from getaddrinfo for IP: %s Error Message: %s\n",
                 ipstr, gai_strerror(ip_lookup_failed));
         #endif
-        char *cp;
-        cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
-        return cp;
+        MMDB_close(&mmdb);
+        return WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
     }
 
     if (db_status != MMDB_SUCCESS) {
@@ -234,9 +232,8 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
                 MMDB_CITY_PATH,
                 MMDB_strerror(db_status));
         #endif
-        char *cp;
-        cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
-        return cp;
+		MMDB_close(&mmdb);
+        return WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
     }
 
     // Parse results
@@ -260,14 +257,12 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
         if (country != NULL && strcmp(country,"US") == 0) {
             state = get_value(&result, state_lookup);
         } else {
-            state = malloc(sizeof(char)*2);
-            sprintf(state,"--");
+            state = strdup("--");
         }
 
         // we should always return new york
         if (country == NULL || city == NULL || state == NULL) {
-            data = malloc(strlen(DEFAULT_WEATHER_CODE));
-            sprintf(data,DEFAULT_WEATHER_CODE);
+            data = strdup(DEFAULT_WEATHER_CODE);
         } else {
             size_t chars = (sizeof(char)* ( strlen(country) + strlen(city) + strlen(state)) ) + 1;
             data = malloc(chars);
@@ -289,7 +284,9 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
     cp = WS_Dup(sp->wrk->ws, data);
 
     // clean up
-    free(data);
+	if (data != NULL)
+		free(data);
+
     if (country != NULL)
         free(country);
 
