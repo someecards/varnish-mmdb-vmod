@@ -201,7 +201,7 @@ const char *
 vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
 {
     MMDB_s mmdb;
-    char * data;
+    char * data = NULL;
 
     // Create DB connection
     int openfailure = open_mmdb(&mmdb);
