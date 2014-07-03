@@ -1,5 +1,6 @@
 #Varnish vmod for mmdb
-=== NOTE
+===
+**NOTE**
 This is for Varnish 3
 
 ## Installation
