@@ -37,9 +37,9 @@ open_mmdb(MMDB_s * mmdb) {
             fprintf(stderr, "[ERROR] open_mmdb: IO error: %s\n", strerror(errno));
         }
         #endif
-		return 1;
+        return 1;
     }
-	return 0;
+    return 0;
 }
 
 /**
@@ -53,8 +53,8 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
 
         // Create DB connection
         int openfailed = open_mmdb(&mmdb);
-		if (openfailed) 
-			return NULL;
+        if (openfailed) 
+            return NULL;
 
         // Lookup IP in the DB
         int gai_error, mmdb_error;
@@ -204,11 +204,11 @@ vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
 
     // Create DB connection
     int openfailure = open_mmdb(&mmdb);
-	if (openfailure) {
-		char *cp;
-		cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
-		return cp;
-	}
+    if (openfailure) {
+        char *cp;
+        cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
+        return cp;
+    }
 
     // Lookup IP in the DB
     int ip_lookup_failed, db_status;
@@ -221,9 +221,9 @@ vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
                 "[WARN] vmod_lookup_weathercode: Error from getaddrinfo for IP: %s Error Message: %s\n",
                 ipstr, gai_strerror(ip_lookup_failed));
         #endif
-		char *cp;
-		cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
-		return cp;
+        char *cp;
+        cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
+        return cp;
     }
 
     if (db_status != MMDB_SUCCESS) {
@@ -231,12 +231,12 @@ vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
         fprintf(stderr,
                 "[ERROR] vmod_lookup_weathercode: libmaxminddb failure. \
 Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
-				MMDB_CITY_PATH,
+                MMDB_CITY_PATH,
                 MMDB_strerror(db_status));
         #endif
-		char *cp;
-		cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
-		return cp;
+        char *cp;
+        cp = WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
+        return cp;
     }
 
     // Parse results
@@ -253,26 +253,26 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
     const char *state_lookup[]   = {"subdivisions", "0", "iso_code", NULL};
 
     if (result.found_entry) {
-		
+        
         country = get_value(&result, country_lookup);
-		city    = get_value(&result, city_lookup);
+        city    = get_value(&result, city_lookup);
 
         if (country != NULL && strcmp(country,"US") == 0) {
             state = get_value(&result, state_lookup);
         } else {
-			state = malloc(sizeof(char)*2);
+            state = malloc(sizeof(char)*2);
             sprintf(state,"--");
         }
 
-		// we should always return new york
-		if (country == NULL || city == NULL || state == NULL) {
-			data = malloc(strlen(DEFAULT_WEATHER_CODE));
-			sprintf(data,DEFAULT_WEATHER_CODE);
-		} else {
-			size_t chars = (sizeof(char)* ( strlen(country) + strlen(city) + strlen(state)) ) + 1;
-			data = malloc(chars);
-			sprintf(data, "%s%s%s", city, state, country);
-		}
+        // we should always return new york
+        if (country == NULL || city == NULL || state == NULL) {
+            data = malloc(strlen(DEFAULT_WEATHER_CODE));
+            sprintf(data,DEFAULT_WEATHER_CODE);
+        } else {
+            size_t chars = (sizeof(char)* ( strlen(country) + strlen(city) + strlen(state)) ) + 1;
+            data = malloc(chars);
+            sprintf(data, "%s%s%s", city, state, country);
+        }
 
     } else {
         #ifdef DEBUG
@@ -282,22 +282,22 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
                 ipstr);
         #endif
         data = malloc(strlen(DEFAULT_WEATHER_CODE));
-		sprintf(data,DEFAULT_WEATHER_CODE);
+        sprintf(data,DEFAULT_WEATHER_CODE);
     }
  
     char *cp;
     cp = WS_Dup(sp->wrk->ws, data);
 
-	// clean up
+    // clean up
     free(data);
-	if (country != NULL)
-		free(country);
+    if (country != NULL)
+        free(country);
 
-	if (city != NULL)
-		free(city);
+    if (city != NULL)
+        free(city);
 
-	if (state != NULL)
-		free(state);
+    if (state != NULL)
+        free(state);
 
     MMDB_close(&mmdb);
     return cp;
