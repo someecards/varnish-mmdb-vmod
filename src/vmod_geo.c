@@ -276,8 +276,7 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
                 "[INFO] No entry for this IP address (%s) was found\n",
                 ipstr);
         #endif
-        data = malloc(strlen(DEFAULT_WEATHER_CODE));
-        sprintf(data,DEFAULT_WEATHER_CODE);
+        data = strdup(DEFAULT_WEATHER_CODE);
     }
  
     char *cp;
