@@ -1,5 +1,5 @@
 #Varnish vmod for mmdb
-===
+
 **NOTE**
 This is for Varnish 3
 
@@ -7,6 +7,7 @@ This is for Varnish 3
 I'm going to assume you have nothing installed. 
 
 Requires Varnish cache from https://github.com/varnish/Varnish-Cache
+
 Requires libmaxminddb from https://github.com/maxmind/libmaxminddb
 
 ```
