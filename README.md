@@ -28,7 +28,7 @@ cd libmaxminddb
 make 
 make install
 cd ..
-git clone git@github.com:someecards/varnish-mmdb-vmod.git
+git clone git@github.com:russellsimpkins/varnish-mmdb-vmod.git
 cd varnish-mmdb-vmod
 ./autogen.sh
 ./configure --prefix=/usr/local VARNISHSRC=[PATH_TO_VARNISH_SRC] VMODDIR=/usr/local/lib/varnish/vmods
