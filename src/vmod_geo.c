@@ -5,29 +5,45 @@
 #include "bin/varnishd/cache.h"
 #include "include/vct.h"
 #include "vcc_if.h"
-#define DEBUG 1
+#include "vmod_geo.h"
 
-static char* MMDB_CITY_PATH = "/mnt/mmdb/GeoLite2-City.mmdb";
-static char* MMDB_COUNTRY_PATH = "/mnt/mmdb/GeoLite2-Country.mmdb";
+// can come by way of configure --with-maxminddbfile 
+#ifndef MAX_CITY_DB
+#define MAX_CITY_DB "/mnt/mmdb/GeoLite2-City.mmdb"
+#endif
+
+#define DEBUG 0
+
+static char* MMDB_CITY_PATH = MAX_CITY_DB;
 static char* DEFAULT_WEATHER_CODE = "New YorkNYUS";
 
-int 
-open_mmdb(MMDB_s * mmdb);
+static MMDB_s mmdb;
+static int    baddb;
 
-char *
-get_value(MMDB_lookup_result_s *result, const char **path);
-
+// open the maxmind db once, during initialization.
 int
-init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
+init_function(struct vmod_priv *priv, const struct VCL_conf *conf) 
 {
-        return 1;
+	baddb = open_mmdb(&mmdb);
+	if (!baddb) {
+		priv->priv = (void *)&mmdb;
+		priv->free = close_mmdb;
+    }
+	return baddb;
 }
 
-/**
- * Opens the maxmind db file
- */
+void close_mmdb(void *db) 
+{
+	// don't do anything if the db didn't open correctly.
+	if (baddb)
+		return;
+	MMDB_s *handle = (MMDB_s *)db;
+	MMDB_close(handle);
+}
+
+// Open the maxmind db file
 int
-open_mmdb(MMDB_s * mmdb) {
+open_mmdb(MMDB_s *mmdb) {
     int status = MMDB_open(MMDB_CITY_PATH, MMDB_MODE_MMAP, mmdb);
     if (status != MMDB_SUCCESS) {
         #ifdef DEBUG
@@ -42,84 +58,78 @@ open_mmdb(MMDB_s * mmdb) {
     return 0;
 }
 
-/**
- * Lookup a field 
- */
+
+// Lookup a field
 const char *
 vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
 {
-        MMDB_s mmdb;
-        char *data = NULL;
+	char *data = NULL;
 
-        // Create DB connection
-        int openfailed = open_mmdb(&mmdb);
-        if (openfailed) 
-            return NULL;
+	if (baddb)
+		return NULL;
 
-        // Lookup IP in the DB
-        int gai_error, mmdb_error;
-        MMDB_lookup_result_s result =
-            MMDB_lookup_string(&mmdb, ipstr, &gai_error, &mmdb_error);
+	// Lookup IP in the DB
+	int gai_error, mmdb_error;
+	MMDB_lookup_result_s result =
+		MMDB_lookup_string(&mmdb, ipstr, &gai_error, &mmdb_error);
+	
+	if (0 != gai_error) {
+        #ifdef DEBUG
+		fprintf(stderr,
+				"[INFO] Error from getaddrinfo for %s - %s\n\n",
+				ipstr, gai_strerror(gai_error));
+        #endif
+		return NULL;
+	}
 
-        if (0 != gai_error) {
+	if (MMDB_SUCCESS != mmdb_error) {
+        #ifdef DEBUG
+		fprintf(stderr,
+				"[ERROR] Got an error from libmaxminddb: %s\n\n",
+				MMDB_strerror(mmdb_error));
+        #endif
+		return NULL;
+	}
+
+	// Parse results
+	MMDB_entry_data_s entry_data;
+	int exit_code = 0;
+	char* str = NULL;
+	if (result.found_entry) {
+		int status = MMDB_aget_value(&result.entry, &entry_data, lookup_path);
+		
+		if (MMDB_SUCCESS != status) {
             #ifdef DEBUG
-            fprintf(stderr,
-                    "[INFO] Error from getaddrinfo for %s - %s\n\n",
-                    ipstr, gai_strerror(gai_error));
-            #endif
-			MMDB_close(&mmdb);
-            return NULL;
-        }
-
-        if (MMDB_SUCCESS != mmdb_error) {
-            #ifdef DEBUG
-            fprintf(stderr,
-                    "[ERROR] Got an error from libmaxminddb: %s\n\n",
-                    MMDB_strerror(mmdb_error));
-            #endif
-			MMDB_close(&mmdb);
-            return NULL;
-        }
-
-        // Parse results
-        MMDB_entry_data_s entry_data;
-        int exit_code = 0;
-        char* str = NULL;
-        if (result.found_entry) {
-            int status = MMDB_aget_value(&result.entry, &entry_data, lookup_path);
-
-            if (MMDB_SUCCESS != status) {
-                #ifdef DEBUG
-                fprintf(
+			fprintf(
                     stderr,
                     "[WARN] Got an error looking up the entry data. Make sure the lookup_path is correct. %s\n",
                     MMDB_strerror(status));
-                #endif
-                exit_code = 4;
-            }
+            #endif
+			exit_code = 4;
+		}
 
-            if (entry_data.has_data) {
-                switch(entry_data.type){
-                    case MMDB_DATA_TYPE_UTF8_STRING:
-                        data = strndup(entry_data.utf8_string, entry_data.data_size);
-                        break;
-                    case MMDB_DATA_TYPE_UINT16:
-                        str = malloc(entry_data.data_size);
-                        sprintf(str, "%u", entry_data.uint16);
-                        data = strndup(str, entry_data.data_size);
-                        free(str);
-                        break;
-                    default:
-                        #ifdef DEBUG
-                        fprintf(
-                            stderr,
-                            "[WARN] No handler for entry data type (%d) was found\n",
-                            entry_data.type);
-                        #endif
-                        exit_code = 6;
-                        break;
-                }
-            }
+		if (entry_data.has_data) {
+			switch(entry_data.type){
+			case MMDB_DATA_TYPE_UTF8_STRING:
+				data = strndup(entry_data.utf8_string, entry_data.data_size);
+				break;
+			case MMDB_DATA_TYPE_UINT16:
+				str = malloc(entry_data.data_size);
+				sprintf(str, "%u", entry_data.uint16);
+				data = strndup(str, entry_data.data_size);
+				free(str);
+				break;
+			default:
+                #ifdef DEBUG
+				fprintf(
+						stderr,
+						"[WARN] No handler for entry data type (%d) was found\n",
+						entry_data.type);
+                #endif
+				exit_code = 6;
+				break;
+			}
+		}
     } else {
         #ifdef DEBUG
         fprintf(
@@ -129,15 +139,14 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
         #endif
         exit_code = 5;
     }
-
+	
     if (exit_code != 0) {
         data = calloc(1, sizeof(char));
     }
-
+	
     char *cp;
     cp = WS_Dup(sp->wrk->ws, data);
     free(data);
-    MMDB_close(&mmdb);
     return cp;
 }
 
@@ -200,12 +209,9 @@ get_value(MMDB_lookup_result_s *result, const char **path) {
 const char *
 vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
 {
-    MMDB_s mmdb;
-    char * data = NULL;
+    char *data = NULL;
 
-    // Create DB connection
-    int openfailure = open_mmdb(&mmdb);
-    if (openfailure) {
+    if (baddb) {
         return WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
     }
 
@@ -220,7 +226,6 @@ vmod_lookup_weathercode(struct sess *sp, const char *ipstr)
                 "[WARN] vmod_lookup_weathercode: Error from getaddrinfo for IP: %s Error Message: %s\n",
                 ipstr, gai_strerror(ip_lookup_failed));
         #endif
-        MMDB_close(&mmdb);
         return WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
     }
 
@@ -232,12 +237,8 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
                 MMDB_CITY_PATH,
                 MMDB_strerror(db_status));
         #endif
-		MMDB_close(&mmdb);
         return WS_Dup(sp->wrk->ws, DEFAULT_WEATHER_CODE);
     }
-
-    // Parse results
-    int exit_code = 0;
 
     // these varaibles will hold our results
     char *country = NULL;
@@ -295,7 +296,6 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
     if (state != NULL)
         free(state);
 
-    MMDB_close(&mmdb);
     return cp;
 }
 

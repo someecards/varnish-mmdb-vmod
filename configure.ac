@@ -52,10 +52,19 @@ AC_CHECK_FILE([$VARNISHSRC/include/varnishapi.h],
 
 # Check for libmaxminddb
 AC_ARG_WITH([maxminddb],
-    [ --with-maxminddb=PATH find the maxminddb SDK installed in PATH],
+    [AS_HELP_STRING([--with-maxminddb],
+	[the directory where the maxminddb SDK is installed in])],
     [
         CPPFLAGS="$CPPFLAGS -I${withval}/include"
         LDFLAGS="$LDFLAGS -L${withval}/lib"
+    ],
+    [:]
+)
+AC_ARG_WITH([maxminddbfile],
+    [AS_HELP_STRING([--with-maxminddbfile],
+	[the maximind city db file e.g. /mnt/mmdb/GeoLite2-City.mmdb])],
+    [
+        AC_SUBST(MAX_CITY_DB,[${withval}])
     ],
     [:]
 )
