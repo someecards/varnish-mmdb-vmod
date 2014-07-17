@@ -2,6 +2,7 @@
 
 ## Installation
 Requires:
+ * Varnish 3.X
  * libmaxminddb from https://github.com/maxmind/libmaxminddb
  * varnish source the version you're installing into https://github.com/varnish/Varnish-Cache
  * GeoLite2 IP db http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz *note: must be installed to /mnt/mmdb/GeoLite2-City.mmdb*
