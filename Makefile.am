@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 SUBDIRS = src
-
+docdir = ${datadir}/doc/${PACKAGE}
 doc_DATA = README.md LICENSE
 
 dist_man_MANS = vmod_geo.3
