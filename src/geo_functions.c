@@ -16,7 +16,7 @@ static char* DEFAULT_WEATHER_CODE = "New YorkNYUS";
 MMDB_s *
 get_handle() 
 {
-	return &mmdb_handle;
+    return &mmdb_handle;
 }
 // close gets called by varnish when then the treads destroyed
 void close_mmdb(void *db) 
@@ -132,7 +132,7 @@ geo_lookup(const char *ipstr, const char **lookup_path)
     if (exit_code != 0) {
         data = calloc(1, sizeof(char));
     }
-	return data;
+    return data;
 }
 
  
@@ -185,20 +185,20 @@ get_value(MMDB_lookup_result_s *result, const char **path) {
 
 // This function builds up a code we need to lookup weather
 // using Accuweather data.
-// country code						e.g. US
-// city								e.g. Beverly Hills
+// country code                     e.g. US
+// city                             e.g. Beverly Hills
 // if country code == US, get region e.g. CA
 // And then return "Beverly HillsCAUS" if a US address or
-//  				  "Paris--FR" if non US
+//                    "Paris--FR" if non US
 char *
 geo_lookup_weather(const char *ipstr) 
 {
-	
+    
     if (mmdb_baddb) {
         return strdup(DEFAULT_WEATHER_CODE);
     }
 
-	char *data;
+    char *data;
 
     // Lookup IP in the DB
     int ip_lookup_failed, db_status;
@@ -222,7 +222,7 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
                 MMDB_CITY_PATH,
                 MMDB_strerror(db_status));
         #endif
-		return strdup(DEFAULT_WEATHER_CODE);
+        return strdup(DEFAULT_WEATHER_CODE);
     }
 
     // these varaibles will hold our results
@@ -264,7 +264,7 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
         #endif
         data = strdup(DEFAULT_WEATHER_CODE);
     }
-	if (country != NULL)
+    if (country != NULL)
         free(country);
 
     if (city != NULL)
@@ -273,5 +273,5 @@ Maybe there is something wrong with the file: %s libmaxmind error: %s\n",
     if (state != NULL)
         free(state);
 
-	return data;
+    return data;
 }
