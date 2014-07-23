@@ -19,12 +19,14 @@ git clone https://github.com/varnish/Varnish-Cache.git
 cd Varnish-Cache
 git branch 3.0 -t origin/3.0
 git checkout 3.0
+# make sure i'm matching release versions - 3.0.5 in my case.
+git checkout 1a89b1f75895bbf874e83cfc6f6123737a3fd76f
 ./autogen.sh
 ./configure --prefix=/usr/local
 make
 make install
 cd ..
-git clone https://github.com/maxmind/libmaxminddb.git
+git clone --recursive https://github.com/maxmind/libmaxminddb.git
 cd libmaxminddb
 ./bootstrap
 ./configure --prefix=/usr/local
