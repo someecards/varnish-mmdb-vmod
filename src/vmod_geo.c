@@ -33,7 +33,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                     fprintf(stderr, "    IO error: %s\n", strerror(errno));
                 }
                 #endif
-                exit(1);
+                return NULL;
         }
 
         // Lookup IP in the DB
@@ -47,7 +47,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                     "\n  Error from getaddrinfo for %s - %s\n\n",
                     ipstr, gai_strerror(gai_error));
             #endif
-            exit(2);
+            return NULL;
         }
 
         if (MMDB_SUCCESS != mmdb_error) {
@@ -56,7 +56,7 @@ vmod_lookup(struct sess *sp, const char *ipstr, const char **lookup_path)
                     "\n  Got an error from libmaxminddb: %s\n\n",
                     MMDB_strerror(mmdb_error));
             #endif
-            exit(3);
+            return NULL;
         }
 
         // Parse results
