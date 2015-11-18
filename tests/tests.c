@@ -63,6 +63,24 @@ void test_LookupState(void)
     TEST_ASSERT_EQUAL_STRING(expected, actual);
 }
 
+void test_LookupLongitude(void)
+{
+    const char *lookup_path[] = {"location", "longitude", NULL};
+    char *ip = "199.254.0.98";
+    const char *actual = geo_lookup(ip, lookup_path);
+    char *expected = "-118.403200";
+    TEST_ASSERT_EQUAL_STRING(expected, actual);
+}
+
+void test_LookupLatitude(void)
+{
+    const char *lookup_path[] = {"location", "latitude", NULL};
+    char *ip = "199.254.0.98";
+    const char *actual = geo_lookup(ip, lookup_path);
+    char *expected = "34.060700";
+    TEST_ASSERT_EQUAL_STRING(expected, actual);
+}
+
 void test_LookupCountry(void)
 {
     const char *lookup_path[] = {"country", "iso_code", NULL};
