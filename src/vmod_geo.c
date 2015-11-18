@@ -71,6 +71,20 @@ vmod_country(struct sess *sp, const char *ipstr)
 }
 
 const char*
+vmod_longitude(struct sess *sp, const char *ipstr)
+{
+    const char *lookup_path[] = {"location", "longitude", NULL};
+    return vmod_lookup(sp, ipstr, lookup_path);
+}
+
+const char*
+vmod_latitude(struct sess *sp, const char *ipstr)
+{
+    const char *lookup_path[] = {"location", "latitude", NULL};
+    return vmod_lookup(sp, ipstr, lookup_path);
+}
+
+const char*
 vmod_metro_code(struct sess *sp, const char *ipstr)
 {
     const char *lookup_path[] = {"location", "metro_code", NULL};

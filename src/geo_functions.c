@@ -107,6 +107,9 @@ geo_lookup(const char *ipstr, const char **lookup_path)
                 data = strndup(str, entry_data.data_size);
                 free(str);
                 break;
+            case MMDB_DATA_TYPE_DOUBLE:
+                asprintf(&data, "%f", entry_data.double_value);
+                break;
             default:
                 #ifdef DEBUG
                 fprintf(
@@ -168,6 +171,9 @@ get_value(MMDB_lookup_result_s *result, const char **path) {
         case MMDB_DATA_TYPE_UINT16:
             value = malloc(entry_data.data_size);
             sprintf(value, "%u", entry_data.uint16);
+            break;
+        case MMDB_DATA_TYPE_DOUBLE:
+            asprintf(&value, "%f", entry_data.double_value);
             break;
         default:
             #ifdef DEBUG
